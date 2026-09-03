@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Force white mode */
+html {
+  color-scheme: light;
+}
+
+/* TipTap Editor Styles */
+.ProseMirror {
+  outline: none;
+  min-height: 200px;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+.ProseMirror h1 {
+  @apply text-2xl font-bold text-gray-900 mt-4 mb-2;
+}
+.ProseMirror h2 {
+  @apply text-xl font-bold text-gray-800 mt-3 mb-2;
+}
+.ProseMirror h3 {
+  @apply text-lg font-semibold text-gray-800 mt-2 mb-1;
+}
+.ProseMirror p {
+  @apply leading-relaxed text-gray-700 mb-1;
+}
+.ProseMirror strong {
+  @apply font-bold text-gray-900;
+}
+.ProseMirror em {
+  @apply italic;
+}
+.ProseMirror u {
+  @apply underline;
+}
+.ProseMirror s {
+  @apply line-through text-gray-400;
+}
+.ProseMirror code {
+  @apply bg-gray-100 text-rose-600 px-1 py-0.5 rounded text-sm font-mono;
+}
+.ProseMirror blockquote {
+  @apply border-l-4 border-blue-300 pl-4 my-2 text-gray-500 italic;
+}
+.ProseMirror ul {
+  @apply list-disc list-inside ml-4 my-1 space-y-0.5;
+}
+.ProseMirror ol {
+  @apply list-decimal list-inside ml-4 my-1 space-y-0.5;
+}
+.ProseMirror li {
+  @apply text-gray-700;
+}
+.ProseMirror hr {
+  @apply border-t border-gray-200 my-4;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+::-webkit-scrollbar-thumb {
+  background: #dee2e6;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #adb5bd;
+}
