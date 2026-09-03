@@ -77,10 +77,18 @@ export function saveTodos(todos: TodoItem[]): void {
   localStorage.setItem(TODOS_KEY, JSON.stringify(todos));
 }
 
-export function createTodo(date: string, time: string, title: string, description?: string, color?: string): TodoItem {
+export function createTodo(
+  date: string,
+  time: string,
+  title: string,
+  description?: string,
+  color?: string,
+  dates?: string[]
+): TodoItem {
   return {
     id: `todo_${Date.now()}_${Math.random().toString(36).slice(2)}`,
     date,
+    dates: dates && dates.length > 0 ? dates : [date],
     time,
     title,
     description,
@@ -99,7 +107,9 @@ export function deleteTodo(todos: TodoItem[], id: string): TodoItem[] {
 }
 
 export function getTodosForDate(todos: TodoItem[], date: string): TodoItem[] {
-  return todos.filter((t) => t.date === date).sort((a, b) => a.time.localeCompare(b.time));
+  return todos
+    .filter((t) => t.date === date || (t.dates && t.dates.includes(date)))
+    .sort((a, b) => a.time.localeCompare(b.time));
 }
 
 // JSON Export/Import

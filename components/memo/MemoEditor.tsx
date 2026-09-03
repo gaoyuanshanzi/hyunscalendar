@@ -9,7 +9,7 @@ import { useEffect, useCallback, useState } from 'react';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3, List, ListOrdered, Quote,
-  Code, Undo, Redo, Save, Trash2, FileText, AlignLeft
+  Code, Undo, Redo, Save, Trash2, StickyNote, AlignLeft, Download
 } from 'lucide-react';
 
 interface MemoEditorProps {
@@ -30,13 +30,13 @@ export default function MemoEditor({ memo, onSave, onDelete }: MemoEditorProps) 
       }),
       Underline,
       Placeholder.configure({
-        placeholder: '메모 내용을 입력하세요...',
+        placeholder: '포스트잇 메모 내용을 입력하세요...',
         emptyEditorClass: 'is-editor-empty',
       }),
     ],
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none focus:outline-none min-h-[200px] p-4 text-gray-800 leading-relaxed',
+        class: 'prose prose-sm max-w-none focus:outline-none min-h-[300px] p-6 text-amber-950 leading-relaxed font-sans',
       },
     },
     onUpdate: ({ editor }) => {
@@ -70,12 +70,12 @@ export default function MemoEditor({ memo, onSave, onDelete }: MemoEditorProps) 
     setSaved(true);
   }, [memo, editor, title, onSave]);
 
-  // Auto-save on title change
+  // Auto-save on title or content change
   useEffect(() => {
     if (!memo || saved) return;
     const timer = setTimeout(() => {
       handleSave();
-    }, 2000);
+    }, 1500);
     return () => clearTimeout(timer);
   }, [title, saved, handleSave, memo]);
 
@@ -86,35 +86,123 @@ export default function MemoEditor({ memo, onSave, onDelete }: MemoEditorProps) 
     }
   };
 
+  const handleExportHTML = () => {
+    if (!memo || !editor) return;
+    const safeTitle = (memo.title || '메모').replace(/[\\/:*?"<>|]/g, '_');
+    const fullHtml = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${memo.title || '제목 없음'}</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 36px;
+      background: #fefce8;
+      color: #451a03;
+      line-height: 1.7;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+      border: 1px solid #fef08a;
+    }
+    h1.doc-title {
+      font-size: 26px;
+      margin-top: 0;
+      color: #78350f;
+      border-bottom: 2px solid #fde047;
+      padding-bottom: 12px;
+    }
+    .meta-bar {
+      font-size: 13px;
+      color: #92400e;
+      margin-bottom: 24px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #fde047;
+    }
+    .content h1 { font-size: 22px; color: #78350f; margin-top: 24px; margin-bottom: 10px; }
+    .content h2 { font-size: 19px; color: #92400e; margin-top: 20px; margin-bottom: 8px; }
+    .content h3 { font-size: 16px; color: #b45309; margin-top: 16px; margin-bottom: 6px; }
+    .content p { margin: 8px 0; font-size: 15px; }
+    .content blockquote {
+      border-left: 4px solid #facc15;
+      padding-left: 16px;
+      margin: 16px 0;
+      color: #78350f;
+      font-style: italic;
+    }
+    .content code {
+      background: #fef08a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    .content ul { list-style-type: disc; margin-left: 24px; }
+    .content ol { list-style-type: decimal; margin-left: 24px; }
+    .content li { margin: 4px 0; }
+  </style>
+</head>
+<body>
+  <h1 class="doc-title">${memo.title || '제목 없음'}</h1>
+  <div class="meta-bar">
+    작성일: ${memo.createdAt ? new Date(memo.createdAt).toLocaleString('ko-KR') : '-'} &nbsp;|&nbsp;
+    최종 수정: ${memo.updatedAt ? new Date(memo.updatedAt).toLocaleString('ko-KR') : '-'}
+  </div>
+  <div class="content">
+    ${editor.getHTML()}
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${safeTitle}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (!memo) {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-white text-gray-400">
-        <FileText size={48} className="mb-4 opacity-20" />
-        <p className="text-sm font-medium text-gray-500">메모를 선택하거나 새로 만드세요</p>
-        <p className="text-xs mt-1 text-gray-400">왼쪽 패널에서 메모를 선택하면 내용이 표시됩니다</p>
+      <div className="h-full flex flex-col items-center justify-center bg-[#FFFDF0] text-amber-800/60 p-6">
+        <StickyNote size={52} className="mb-4 text-amber-300 fill-amber-100 opacity-60" />
+        <p className="text-sm font-semibold text-amber-900">메모를 선택하거나 새로 만들어보세요</p>
+        <p className="text-xs mt-1 text-amber-800/60">왼쪽 메모 목록에서 메모를 클릭하면 내용을 바로 편집할 수 있습니다</p>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-[#FFFDF0] shadow-inner">
       {/* Top Bar */}
-      <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between gap-2">
+      <div className="px-5 py-3 border-b border-[#FDE047]/80 bg-[#FEF9C3]/80 flex items-center justify-between gap-3 shadow-xs">
         <input
           type="text"
           value={title}
           onChange={(e) => { setTitle(e.target.value); setSaved(false); }}
-          placeholder="메모 제목"
-          className="flex-1 text-base font-bold text-gray-800 bg-transparent border-none focus:outline-none placeholder:text-gray-300 truncate"
+          placeholder="메모 제목을 입력하세요"
+          className="flex-1 text-base font-bold text-amber-950 bg-transparent border-none focus:outline-none placeholder:text-amber-800/40 truncate"
         />
         <div className="flex items-center gap-1.5 shrink-0">
-          <span className={`text-xs px-2 py-0.5 rounded-full ${saved ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'}`}>
-            {saved ? '저장됨' : '미저장'}
+          <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${saved ? 'text-emerald-700 bg-emerald-100/80' : 'text-amber-800 bg-amber-200'}`}>
+            {saved ? '저장됨' : '저장 중...'}
           </span>
           <button
+            onClick={handleExportHTML}
+            title="HTML로 내보내기 (다운로드)"
+            className="flex items-center gap-1 text-xs bg-amber-200/90 hover:bg-amber-300 text-amber-950 font-medium px-2.5 py-1.5 rounded-lg border border-amber-300 transition shadow-xs"
+          >
+            <Download size={13} />
+            HTML 내보내기
+          </button>
+          <button
             onClick={handleSave}
-            title="저장 (Ctrl+S)"
-            className="flex items-center gap-1 text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition"
+            title="저장"
+            className="flex items-center gap-1 text-xs bg-amber-500 hover:bg-amber-600 text-white font-medium px-3 py-1.5 rounded-lg transition shadow-xs"
           >
             <Save size={13} />
             저장
@@ -122,7 +210,7 @@ export default function MemoEditor({ memo, onSave, onDelete }: MemoEditorProps) 
           <button
             onClick={handleDelete}
             title="삭제"
-            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+            className="p-1.5 text-amber-800 hover:text-red-600 hover:bg-red-100/70 rounded-lg transition"
           >
             <Trash2 size={14} />
           </button>
@@ -131,7 +219,7 @@ export default function MemoEditor({ memo, onSave, onDelete }: MemoEditorProps) 
 
       {/* Toolbar */}
       {editor && (
-        <div className="flex flex-wrap items-center gap-0.5 px-3 py-2 border-b border-gray-100 bg-gray-50">
+        <div className="flex flex-wrap items-center gap-1 px-4 py-2 border-b border-amber-200/60 bg-[#FEFCE8] text-amber-950">
           <ToolBtn
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             active={editor.isActive('heading', { level: 1 })}
@@ -160,7 +248,7 @@ export default function MemoEditor({ memo, onSave, onDelete }: MemoEditorProps) 
           >
             <AlignLeft size={14} />
           </ToolBtn>
-          <div className="w-px h-4 bg-gray-300 mx-1" />
+          <div className="w-px h-4 bg-amber-300/80 mx-1" />
           <ToolBtn
             onClick={() => editor.chain().focus().toggleBold().run()}
             active={editor.isActive('bold')}
@@ -196,7 +284,7 @@ export default function MemoEditor({ memo, onSave, onDelete }: MemoEditorProps) 
           >
             <Code size={14} />
           </ToolBtn>
-          <div className="w-px h-4 bg-gray-300 mx-1" />
+          <div className="w-px h-4 bg-amber-300/80 mx-1" />
           <ToolBtn
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             active={editor.isActive('bulletList')}
@@ -218,7 +306,7 @@ export default function MemoEditor({ memo, onSave, onDelete }: MemoEditorProps) 
           >
             <Quote size={14} />
           </ToolBtn>
-          <div className="w-px h-4 bg-gray-300 mx-1" />
+          <div className="w-px h-4 bg-amber-300/80 mx-1" />
           <ToolBtn
             onClick={() => editor.chain().focus().undo().run()}
             active={false}
@@ -234,12 +322,12 @@ export default function MemoEditor({ memo, onSave, onDelete }: MemoEditorProps) 
             <Redo size={14} />
           </ToolBtn>
           <div className="flex-1" />
-          <span className="text-[11px] text-gray-400">{charCount.toLocaleString()} 자</span>
+          <span className="text-[11px] text-amber-800/70 font-mono">{charCount.toLocaleString()} 자</span>
         </div>
       )}
 
       {/* Editor Area */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-[#FFFDF0]">
         <EditorContent editor={editor} className="h-full" />
       </div>
     </div>
@@ -261,10 +349,10 @@ function ToolBtn({
     <button
       onClick={onClick}
       title={title}
-      className={`p-1.5 rounded-md transition text-sm
+      className={`p-1.5 rounded-md transition text-xs
         ${active
-          ? 'bg-blue-100 text-blue-700 font-bold'
-          : 'text-gray-500 hover:bg-gray-200 hover:text-gray-700'
+          ? 'bg-amber-300 text-amber-950 font-bold shadow-xs'
+          : 'text-amber-900/80 hover:bg-amber-200/60 hover:text-amber-950'
         }`}
     >
       {children}

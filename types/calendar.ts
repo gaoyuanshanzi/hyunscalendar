@@ -1,11 +1,12 @@
 export interface TodoItem {
   id: string;
-  date: string; // YYYY-MM-DD
+  date: string; // Primary YYYY-MM-DD
+  dates?: string[]; // Array of YYYY-MM-DD for multi-date selection
   time: string; // HH:mm (e.g. "09:30", "14:00")
   title: string;
   description?: string;
   completed: boolean;
-  color?: string; // e.g. "blue", "emerald", "amber", "rose", "purple"
+  color?: string; // e.g. "blue", "emerald", "amber", "rose", "purple", "gray"
   createdAt: string;
 }
 
