@@ -33,8 +33,13 @@ export default function CalendarView({ todos, onTodosChange }: CalendarViewProps
 
     return days.map((date): CalendarDay => {
       const lunar = getLunarDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const nextDayLunar = getLunarDate(nextDay.getFullYear(), nextDay.getMonth() + 1, nextDay.getDate());
+      const isDayBeforeSeollal = nextDayLunar.month === 1 && nextDayLunar.day === 1 && !nextDayLunar.isLeapMonth;
+
       const solarHoliday = getSolarHoliday(date.getMonth() + 1, date.getDate());
-      const lunarHoliday = getLunarHoliday(lunar.month, lunar.day);
+      const lunarHoliday = getLunarHoliday(lunar.month, lunar.day, lunar.isLeapMonth, isDayBeforeSeollal);
       const holiday = solarHoliday || lunarHoliday;
 
       return {
